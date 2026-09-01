@@ -1,0 +1,21 @@
+[
+  {"id":"P001","name":"于？？","gender":"male","birth":null,"father":null,"mother":null,"spouses":["P002"],"bio":"姓名尚待考证。"},
+  {"id":"P002","name":"王玉荣","gender":"female","birth":null,"father":null,"mother":null,"spouses":["P001"],"bio":"暂无详细资料。"},
+  {"id":"P003","name":"于加修","gender":"male","birth":null,"father":"P001","mother":"P002","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P004","name":"于爱芹","gender":"female","birth":null,"father":"P003","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P005","name":"曲源靖","gender":"female","birth":null,"father":null,"mother":"P004","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P006","name":"曲源美","gender":"female","birth":null,"father":null,"mother":"P004","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P007","name":"于爱莲","gender":"female","birth":null,"father":"P003","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P008","name":"于水永","gender":"male","birth":null,"father":"P003","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P009","name":"于水利","gender":"male","birth":"1962","father":"P003","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P010","name":"于？","gender":"male","birth":null,"father":"P009","mother":null,"spouses":[],"bio":"姓名尚待考证。"},
+  {"id":"P011","name":"于加齐","gender":"male","birth":null,"father":"P001","mother":"P002","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P012","name":"于红卫","gender":"male","birth":null,"father":"P011","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P013","name":"于玢玢","gender":"female","birth":null,"father":"P012","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P014","name":"于加水","gender":"female","birth":"1931-11-28","father":"P001","mother":"P002","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P015","name":"张杰","gender":"male","birth":"1955","father":null,"mother":"P014","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P016","name":"张倩","gender":"female","birth":"1981","father":"P015","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P017","name":"张益端","gender":"male","birth":"1995","father":"P015","mother":null,"spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P018","name":"张青","gender":"female","birth":"1963","father":null,"mother":"P014","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P019","name":"崔恒纲","gender":"male","birth":"1989","father":null,"mother":"P018","spouses":[],"bio":"暂无详细资料。"}
+]
