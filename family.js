@@ -3,7 +3,7 @@
 const dataUrl = "family.json";
 
 function personLabel(person) {
-  return person.birth ? `${person.name} (${person.birth})` : person.name;
+  return person.name;
 }
 
 function personLink(person, className = "person-card") {
@@ -12,6 +12,7 @@ function personLink(person, className = "person-card") {
     `${className} ${person.gender === "female" ? "female" : "male"}`;
   link.href = `person.html?id=${encodeURIComponent(person.id)}`;
   link.textContent = personLabel(person);
+  link.dataset.personId = person.id;
   return link;
 }
 
@@ -68,7 +69,7 @@ function drawPedigree(viewport, root, childrenOf, byId) {
   const CARD_WIDTH = 148;
   const CARD_HEIGHT = 72;
   const LEAF_GAP = 36;
-  const LEVEL_GAP = 116;
+  const LEVEL_GAP = 64;
   const MARGIN = 50;
 
   // map of person id -> node for drawing relationship lines
@@ -213,29 +214,37 @@ function drawPedigree(viewport, root, childrenOf, byId) {
 
   // draw spouse/relationship lines between node centers
   function drawRelationshipLines() {
+    console.log("family.js: drawing spouse lines from DOM positions");
     console.log("family.js: nodeById keys", Array.from(nodeById.keys()));
+
+    const stageRect = stage.getBoundingClientRect();
 
     for (const [id, node] of nodeById) {
       if (!node.person.spouses || !node.person.spouses.length) continue;
 
+      // prefer any person-card rendered for this id, otherwise fall back to the group container
+      const el = stage.querySelector(`.person-card[data-person-id="${id}"]`) || stage.querySelector(`[data-id="${id}"]`);
+      if (!el) {
+        console.log(`family.js: spouse source element missing for ${id}`);
+        continue;
+      }
+
+      const r1 = el.getBoundingClientRect();
+      const x1 = r1.left - stageRect.left + r1.width / 2;
+      const y1 = r1.top - stageRect.top + r1.height / 2;
+
       for (const sid of node.person.spouses) {
-        if (!nodeById.has(sid)) {
-          console.log(`family.js: skipping spouse line ${id} -> ${sid} (node missing)`);
+        if (id >= sid) continue; // avoid duplicates
+
+        const otherEl = stage.querySelector(`.person-card[data-person-id="${sid}"]`) || stage.querySelector(`[data-id="${sid}"]`);
+        if (!otherEl) {
+          console.log(`family.js: spouse target element missing for ${sid}`);
           continue;
         }
 
-        // avoid drawing duplicate lines: only draw when id < sid
-        if (id >= sid) {
-          console.log(`family.js: skipping duplicate spouse line ${id} -> ${sid}`);
-          continue;
-        }
-
-        const other = nodeById.get(sid);
-
-        const x1 = node.x + CARD_WIDTH / 2;
-        const y1 = node.y + CARD_HEIGHT / 2;
-        const x2 = other.x + CARD_WIDTH / 2;
-        const y2 = other.y + CARD_HEIGHT / 2;
+        const r2 = otherEl.getBoundingClientRect();
+        const x2 = r2.left - stageRect.left + r2.width / 2;
+        const y2 = r2.top - stageRect.top + r2.height / 2;
 
         addLine(x1, y1, x2, y2);
       }
@@ -254,6 +263,7 @@ function drawPedigree(viewport, root, childrenOf, byId) {
     group.style.top = `${node.y}px`;
 
     group.append(personLink(node.person));
+    group.dataset.id = node.person.id;
 
     if (node.depth === 0) {
       (node.person.spouses || []).forEach(id => {
@@ -274,60 +284,66 @@ function drawPedigree(viewport, root, childrenOf, byId) {
     stage.append(group);
 
     if (node.children.length) {
-      const parentCenterX =
-        node.x + CARD_WIDTH / 2;
-
-      const parentBottomY =
-        node.y + CARD_HEIGHT;
-
-      const junctionY =
-        parentBottomY + LEVEL_GAP / 2;
-
-      const firstCenterX =
-        node.children[0].x + CARD_WIDTH / 2;
-
-      const lastCenterX =
-        node.children[node.children.length - 1].x +
-        CARD_WIDTH / 2;
-
-      addLine(
-        parentCenterX,
-        parentBottomY,
-        parentCenterX,
-        junctionY
-      );
-
-      addLine(
-        firstCenterX,
-        junctionY,
-        lastCenterX,
-        junctionY
-      );
-
-      node.children.forEach(child => {
-        const childCenterX =
-          child.x + CARD_WIDTH / 2;
-
-        addLine(
-          childCenterX,
-          junctionY,
-          childCenterX,
-          child.y
-        );
-
-        render(child);
-      });
+      node.children.forEach(child => render(child));
     }
   }
-
-  // render nodes (which also draws parent->child connectors)
+  // render nodes
   render(rootNode);
   viewport.append(stage);
 
-  // draw spouse/relationship connector lines on top of svg (but beneath person cards)
+  // draw parent->child connectors using DOM positions so lines meet card centers
+  function drawParentChildLines() {
+    const stageRect = stage.getBoundingClientRect();
+
+    for (const [id, node] of nodeById) {
+      if (!node.children || !node.children.length) continue;
+
+      const parentEl = stage.querySelector(`[data-id="${id}"]`);
+      if (!parentEl) continue;
+
+      // prefer the actual card element for centering (the .person-card inside the group)
+      const parentCard = parentEl.querySelector('.person-card') || parentEl;
+      const pr = parentCard.getBoundingClientRect();
+      const parentCenterX = pr.left - stageRect.left + pr.width / 2;
+      const parentCenterY = pr.top - stageRect.top + pr.height / 2;
+
+      const firstChildEl = stage.querySelector(`[data-id="${node.children[0].person.id}"]`);
+      const lastChildEl = stage.querySelector(`[data-id="${node.children[node.children.length - 1].person.id}"]`);
+      if (!firstChildEl || !lastChildEl) continue;
+
+      const fr = firstChildEl.querySelector('.person-card')?.getBoundingClientRect() || firstChildEl.getBoundingClientRect();
+      const lr = lastChildEl.querySelector('.person-card')?.getBoundingClientRect() || lastChildEl.getBoundingClientRect();
+
+      const firstCenterX = fr.left - stageRect.left + fr.width / 2;
+      const lastCenterX = lr.left - stageRect.left + lr.width / 2;
+
+      // children are on the same generation row, take their center Y
+      const childCenterY = fr.top - stageRect.top + fr.height / 2;
+
+      // junction midway between parent center and child center
+      const junctionY = (parentCenterY + childCenterY) / 2;
+
+      // vertical from parent center down to junction
+      addLine(parentCenterX, parentCenterY, parentCenterX, junctionY);
+      // horizontal spine across children
+      addLine(firstCenterX, junctionY, lastCenterX, junctionY);
+
+      for (const child of node.children) {
+        const childEl = stage.querySelector(`[data-id="${child.person.id}"]`);
+        if (!childEl) continue;
+        const crect = childEl.querySelector('.person-card')?.getBoundingClientRect() || childEl.getBoundingClientRect();
+        const childCenterX = crect.left - stageRect.left + crect.width / 2;
+        const childCenterY = crect.top - stageRect.top + crect.height / 2;
+        addLine(childCenterX, junctionY, childCenterX, childCenterY);
+      }
+    }
+  }
+
+  drawParentChildLines();
+
+  // draw spouse lines after parent-child lines
   drawRelationshipLines();
   console.log("family.js: total lines drawn", svg.querySelectorAll('line').length);
-  viewport.append(stage);
 
   viewport.scrollLeft = Math.max(
     0,

@@ -63,6 +63,18 @@ a { color: var(--accent); }
 .person-card.male { background: var(--male); }
 .person-card.female { background: var(--female); }
 .person-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+/* compact styling for pedigree person cards */
+.pedigree-person .person-card {
+  font-size: 0.85rem;
+  padding: .35rem .55rem;
+  min-width: 5.25rem;
+}
+
+.pedigree-person .spouse-join {
+  font-size: 0.8rem;
+  margin: 0 .35rem;
+}
 .breadcrumbs { margin-bottom: 1rem; }
 .person-article { padding: clamp(1.25rem, 4vw, 3rem); }
 .person-article h2 { margin-top: 2.2rem; border-bottom: 1px solid var(--line); font-family: Georgia, "Songti SC", serif; }

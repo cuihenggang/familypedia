@@ -24,20 +24,29 @@ async function loadPerson() {
     };
     const children = people.filter(candidate => candidate.father === person.id || candidate.mother === person.id);
     const spouses = (person.spouses || []).map(linkTo);
+    const extractYear = v => {
+      if (!v) return null;
+      const m = String(v).match(/(\d{4})/);
+      return m ? m[1] : null;
+    };
+
     const childList = children.length
-      ? children.map(child => `<li>${linkTo(child.id)}${child.birth ? `（${escapeHtml(child.birth)}）` : ""}</li>`).join("")
+      ? children.map(child => {
+          const y = extractYear(child.birth);
+          return `<li>${linkTo(child.id)}${y ? `（${escapeHtml(y)}）` : ""}</li>`;
+        }).join("")
       : "<li>暂无资料</li>";
 
     document.title = `${person.name} · FamilyPedia`;
     page.innerHTML = `
       <p class="eyebrow">人物资料 · ${escapeHtml(person.id)}</p>
       <h1>${escapeHtml(person.name)}</h1>
-      <p class="lead">${person.birth ? `${escapeHtml(person.birth)}—` : "生卒年不详"}</p>
+      <p class="lead">${person.birth ? `${escapeHtml(extractYear(person.birth) || person.birth)}` : "生卒年不详"}</p>
       <h2>基本资料</h2>
       <table>
         <tbody>
           <tr><th>姓名</th><td>${escapeHtml(person.name)}</td></tr>
-          <tr><th>出生</th><td>${escapeHtml(person.birth || "未知")}</td></tr>
+          <tr><th>出生</th><td>${escapeHtml(extractYear(person.birth) || (person.birth || "未知"))}</td></tr>
           <tr><th>父亲</th><td>${linkTo(person.father)}</td></tr>
           <tr><th>母亲</th><td>${linkTo(person.mother)}</td></tr>
           <tr><th>配偶</th><td>${spouses.length ? spouses.join("、") : "暂无资料"}</td></tr>
