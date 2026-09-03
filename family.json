@@ -12,10 +12,14 @@
   {"id":"P011","name":"于加齐","gender":"male","birth":null,"father":"P001","mother":"P002","spouses":[],"bio":"暂无详细资料。"},
   {"id":"P012","name":"于红卫","gender":"male","birth":null,"father":"P011","mother":null,"spouses":[],"bio":"暂无详细资料。"},
   {"id":"P013","name":"于玢玢","gender":"female","birth":null,"father":"P012","mother":null,"spouses":[],"bio":"暂无详细资料。"},
-  {"id":"P014","name":"于加水","gender":"female","birth":"1931-11-28","father":"P001","mother":"P002","spouses":[],"bio":"暂无详细资料。"},
+  {"id":"P014","name":"于加水","gender":"female","birth":"1931-11-28","father":"P001","mother":"P002","spouses":["P023"],"bio":"暂无详细资料。"},
   {"id":"P015","name":"张杰","gender":"male","birth":"1955","father":null,"mother":"P014","spouses":[],"bio":"暂无详细资料。"},
   {"id":"P016","name":"张倩","gender":"female","birth":"1981","father":"P015","mother":null,"spouses":[],"bio":"暂无详细资料。"},
   {"id":"P017","name":"张益端","gender":"male","birth":"1995","father":"P015","mother":null,"spouses":[],"bio":"暂无详细资料。"},
   {"id":"P018","name":"张青","gender":"female","birth":"1963","father":null,"mother":"P014","spouses":[],"bio":"暂无详细资料。"},
-  {"id":"P019","name":"崔恒纲","gender":"male","birth":"1989","father":null,"mother":"P018","spouses":[],"bio":"暂无详细资料。"}
+  {"id":"P019","name":"崔恒纲","gender":"male","birth":"1989","father":null,"mother":"P018","spouses":["P020"],"bio":"暂无详细资料。"},
+  {"id":"P020","name":"丁晓雯","gender":"female","birth":"1989","father":null,"mother":null,"spouses":["P019"],"bio":"配偶：崔恒纲。"},
+  {"id":"P021","name":"丁精精","gender":"male","birth":"2017","father":"P019","mother":"P020","spouses":[],"bio":"崔恒纲之子。"},
+  {"id":"P022","name":"丁灵灵","gender":"male","birth":"2025","father":"P019","mother":"P020","spouses":[],"bio":"崔恒纲之子。"},
+  {"id":"P023","name":"张成欣","gender":"female","birth":"1934","father":null,"mother":null,"spouses":["P014"],"bio":"配偶：于加水。"}
 ]

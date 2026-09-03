@@ -210,6 +210,7 @@ function drawPedigree(viewport, root, childrenOf, byId) {
     console.log("family.js: addLine", x1, y1, x2, y2);
 
     svg.append(line);
+    return line;
   }
 
   // draw spouse/relationship lines between node centers
@@ -246,7 +247,9 @@ function drawPedigree(viewport, root, childrenOf, byId) {
         const x2 = r2.left - stageRect.left + r2.width / 2;
         const y2 = r2.top - stageRect.top + r2.height / 2;
 
-        addLine(x1, y1, x2, y2);
+        const line = addLine(x1, y1, x2, y2);
+        // spouse relationship: use dashed stroke
+        line.setAttribute('stroke-dasharray', '6 4');
       }
     }
   }
@@ -266,19 +269,7 @@ function drawPedigree(viewport, root, childrenOf, byId) {
     group.dataset.id = node.person.id;
 
     if (node.depth === 0) {
-      (node.person.spouses || []).forEach(id => {
-        const spouse = byId.get(id);
-
-        if (!spouse) {
-          return;
-        }
-
-        const join = document.createElement("span");
-        join.className = "spouse-join";
-        join.textContent = "配偶";
-
-        group.append(join, personLink(spouse));
-      });
+      // do not render spouses inline; spouse nodes are rendered separately and connected with dashed lines
     }
 
     stage.append(group);
@@ -290,6 +281,44 @@ function drawPedigree(viewport, root, childrenOf, byId) {
   // render nodes
   render(rootNode);
   viewport.append(stage);
+
+  // render spouse nodes for any spouses not present in the main tree
+  const SPOUSE_OFFSET = CARD_WIDTH + 24;
+  const spousePlaced = new Map();
+
+  for (const [id, node] of Array.from(nodeById)) {
+    const spouses = node.person.spouses || [];
+    let idx = 0;
+    for (const sid of spouses) {
+      if (nodeById.has(sid)) continue; // already in tree
+      const spousePerson = byId.get(sid);
+      if (!spousePerson) continue;
+
+      // create a simple node for the spouse at the same generation row, offset to the right
+      const sNode = {
+        person: spousePerson,
+        children: [],
+        leaves: 1,
+        depth: node.depth,
+        x: node.x + SPOUSE_OFFSET + idx * (CARD_WIDTH + 12),
+        y: MARGIN + node.depth * (CARD_HEIGHT + LEVEL_GAP)
+      };
+
+      nodeById.set(sid, sNode);
+
+      // render the spouse node element
+      const sGroup = document.createElement('div');
+      sGroup.className = 'pedigree-person';
+      sGroup.style.left = `${sNode.x}px`;
+      sGroup.style.top = `${sNode.y}px`;
+      sGroup.dataset.id = sNode.person.id;
+      sGroup.append(personLink(sNode.person));
+      stage.append(sGroup);
+
+      spousePlaced.set(sid, sNode);
+      idx += 1;
+    }
+  }
 
   // draw parent->child connectors using DOM positions so lines meet card centers
   function drawParentChildLines() {
