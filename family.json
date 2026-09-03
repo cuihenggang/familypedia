@@ -21,5 +21,5 @@
   {"id":"P020","name":"丁晓雯","gender":"female","birth":"1989","father":null,"mother":null,"spouses":["P019"],"bio":"配偶：崔恒纲。"},
   {"id":"P021","name":"丁精精","gender":"male","birth":"2017","father":"P019","mother":"P020","spouses":[],"bio":"崔恒纲之子。"},
   {"id":"P022","name":"丁灵灵","gender":"male","birth":"2025","father":"P019","mother":"P020","spouses":[],"bio":"崔恒纲之子。"},
-  {"id":"P023","name":"张成欣","gender":"female","birth":"1934","father":null,"mother":null,"spouses":["P014"],"bio":"配偶：于加水。"}
+  {"id":"P023","name":"张成欣","gender":"male","birth":"1934","father":null,"mother":null,"spouses":["P014"],"bio":"配偶：于加水。"}
 ]

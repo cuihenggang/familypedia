@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="FamilyPedia 家族族谱">
-  <title>FamilyPedia · 家族族谱</title>
+  <meta name="description" content="家族族谱">
+  <title>家族族谱</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,16 +16,11 @@
   </header>
 
   <main class="page-shell">
-    <section class="hero">
-      <p class="eyebrow">于氏家族</p>
-      <h1>家族成员与世代关系</h1>
-      <p>点击任意姓名即可查看人物资料及亲属关系。</p>
-    </section>
 
     <section class="panel">
       <div class="toolbar">
         <label for="person-search">搜索人物</label>
-        <input id="person-search" type="search" placeholder="输入姓名，例如：张青" autocomplete="off">
+        <input id="person-search" type="search" placeholder="输入姓名" autocomplete="off">
         <div id="search-results" class="search-results" hidden></div>
       </div>
 
@@ -33,7 +28,6 @@
     </section>
   </main>
 
-  <footer>FamilyPedia · 资料保存在本仓库的 family.json 中</footer>
   <script src="family.js"></script>
 </body>
 </html>
