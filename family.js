@@ -158,17 +158,97 @@ function drawPedigree(viewport, root, childrenOf, byId) {
 
   setY(rootNode);
 
-  const width = Math.max(
-    720,
-    MARGIN * 2 +
-      leaves.length * CARD_WIDTH +
-      Math.max(0, leaves.length - 1) * LEAF_GAP
-  );
+  // create spouse nodes in the node map (not rendered yet) so positioning can account for spouses
+  const SPOUSE_OFFSET = CARD_WIDTH + 36; // increase offset to give spouses more breathing room
+  const spousePlaced = new Map();
 
-  const height =
-    MARGIN * 2 +
-    (maxDepth + 1) * CARD_HEIGHT +
-    maxDepth * LEVEL_GAP;
+  for (const [id, node] of Array.from(nodeById)) {
+    const spouses = node.person.spouses || [];
+    let idx = 0;
+    for (const sid of spouses) {
+      if (nodeById.has(sid)) continue; // already in tree
+      const spousePerson = byId.get(sid);
+      if (!spousePerson) continue;
+
+      // compute initial spouse x, then avoid collisions with existing nodes on same row
+      const baseX = node.x + SPOUSE_OFFSET + idx * (CARD_WIDTH + 12);
+      const minSep = CARD_WIDTH + 12;
+      let sX = baseX;
+      let collision;
+      do {
+        collision = false;
+        for (const existing of nodeById.values()) {
+          if (existing.depth !== node.depth) continue;
+          if (Math.abs(existing.x - sX) < minSep) {
+            sX += minSep;
+            collision = true;
+          }
+        }
+      } while (collision);
+
+      const sNode = {
+        person: spousePerson,
+        children: [],
+        leaves: 1,
+        depth: node.depth,
+        x: sX,
+        y: MARGIN + node.depth * (CARD_HEIGHT + LEVEL_GAP)
+      };
+
+      nodeById.set(sid, sNode);
+      spousePlaced.set(sid, sNode);
+      idx += 1;
+    }
+  }
+
+  // shift subtrees so children are centered between parents when possible
+  function shiftSubtree(n, dx) {
+    n.x += dx;
+    n.children.forEach(c => shiftSubtree(c, dx));
+  }
+
+  function balanceChildren(node) {
+    if (node.children.length) {
+      const first = node.children[0];
+      const last = node.children[node.children.length - 1];
+      const firstCenter = first.x + CARD_WIDTH / 2;
+      const lastCenter = last.x + CARD_WIDTH / 2;
+      const currentCenter = (firstCenter + lastCenter) / 2;
+
+      const parentCenter = node.x + CARD_WIDTH / 2;
+      let desiredCenter = parentCenter;
+
+      if (node.person.spouses && node.person.spouses.length) {
+        const sid = node.person.spouses[0];
+        const spouseNode = nodeById.get(sid);
+        if (spouseNode) {
+          const spouseCenter = spouseNode.x + CARD_WIDTH / 2;
+          desiredCenter = (parentCenter + spouseCenter) / 2;
+        }
+      }
+
+      const dx = desiredCenter - currentCenter;
+      if (Math.abs(dx) > 0.5) {
+        node.children.forEach(c => shiftSubtree(c, dx));
+      }
+    }
+
+    node.children.forEach(balanceChildren);
+  }
+
+  balanceChildren(rootNode);
+
+  // recompute overall width/height from node positions
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const n of nodeById.values()) {
+    minX = Math.min(minX, n.x);
+    maxX = Math.max(maxX, n.x + CARD_WIDTH);
+  }
+
+  const width = Math.max(720, MARGIN * 2 + (maxX - minX));
+
+  const height = MARGIN * 2 + (maxDepth + 1) * CARD_HEIGHT + maxDepth * LEVEL_GAP;
 
   viewport.textContent = "";
 
@@ -187,7 +267,6 @@ function drawPedigree(viewport, root, childrenOf, byId) {
     "viewBox",
     `0 0 ${width} ${height}`
   );
-  svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
 
@@ -198,7 +277,6 @@ function drawPedigree(viewport, root, childrenOf, byId) {
       "http://www.w3.org/2000/svg",
       "line"
     );
-
     line.setAttribute("x1", x1);
     line.setAttribute("y1", y1);
     line.setAttribute("x2", x2);
@@ -247,9 +325,7 @@ function drawPedigree(viewport, root, childrenOf, byId) {
         const x2 = r2.left - stageRect.left + r2.width / 2;
         const y2 = r2.top - stageRect.top + r2.height / 2;
 
-        const line = addLine(x1, y1, x2, y2);
-        // spouse relationship: use dashed stroke
-        line.setAttribute('stroke-dasharray', '6 4');
+        addLine(x1, y1, x2, y2);
       }
     }
   }
@@ -282,42 +358,15 @@ function drawPedigree(viewport, root, childrenOf, byId) {
   render(rootNode);
   viewport.append(stage);
 
-  // render spouse nodes for any spouses not present in the main tree
-  const SPOUSE_OFFSET = CARD_WIDTH + 24;
-  const spousePlaced = new Map();
-
-  for (const [id, node] of Array.from(nodeById)) {
-    const spouses = node.person.spouses || [];
-    let idx = 0;
-    for (const sid of spouses) {
-      if (nodeById.has(sid)) continue; // already in tree
-      const spousePerson = byId.get(sid);
-      if (!spousePerson) continue;
-
-      // create a simple node for the spouse at the same generation row, offset to the right
-      const sNode = {
-        person: spousePerson,
-        children: [],
-        leaves: 1,
-        depth: node.depth,
-        x: node.x + SPOUSE_OFFSET + idx * (CARD_WIDTH + 12),
-        y: MARGIN + node.depth * (CARD_HEIGHT + LEVEL_GAP)
-      };
-
-      nodeById.set(sid, sNode);
-
-      // render the spouse node element
-      const sGroup = document.createElement('div');
-      sGroup.className = 'pedigree-person';
-      sGroup.style.left = `${sNode.x}px`;
-      sGroup.style.top = `${sNode.y}px`;
-      sGroup.dataset.id = sNode.person.id;
-      sGroup.append(personLink(sNode.person));
-      stage.append(sGroup);
-
-      spousePlaced.set(sid, sNode);
-      idx += 1;
-    }
+  // render spouse nodes that were added to nodeById earlier
+  for (const [sid, sNode] of spousePlaced) {
+    const sGroup = document.createElement('div');
+    sGroup.className = 'pedigree-person';
+    sGroup.style.left = `${sNode.x}px`;
+    sGroup.style.top = `${sNode.y}px`;
+    sGroup.dataset.id = sNode.person.id;
+    sGroup.append(personLink(sNode.person));
+    stage.append(sGroup);
   }
 
   // draw parent->child connectors using DOM positions so lines meet card centers
@@ -352,10 +401,35 @@ function drawPedigree(viewport, root, childrenOf, byId) {
       // junction midway between parent center and child center
       const junctionY = (parentCenterY + childCenterY) / 2;
 
-      // vertical from parent center down to junction
-      addLine(parentCenterX, parentCenterY, parentCenterX, junctionY);
-      // horizontal spine across children
-      addLine(firstCenterX, junctionY, lastCenterX, junctionY);
+      // compute child group center
+      const childGroupCenter = (firstCenterX + lastCenterX) / 2;
+
+      // if parent has a spouse shown on the stage, compute spouse midpoint,
+      // then average it with the child group center so the attach point is balanced
+      let attachX = parentCenterX;
+      if (node.person.spouses && node.person.spouses.length) {
+        for (const sid of node.person.spouses) {
+          const spouseEl = stage.querySelector(`.person-card[data-person-id="${sid}"]`) || stage.querySelector(`[data-id="${sid}"]`);
+          if (spouseEl) {
+            const sr = spouseEl.getBoundingClientRect();
+            const spouseCenterX = sr.left - stageRect.left + sr.width / 2;
+            const spouseMid = (parentCenterX + spouseCenterX) / 2;
+            // average spouse-midpoint and child group center for balanced attach
+            attachX = (spouseMid + childGroupCenter) / 2;
+            break;
+          }
+        }
+      } else {
+        // no spouse: center attach to child group center
+        attachX = childGroupCenter;
+      }
+
+      // vertical from the attach point (balanced midpoint)
+      addLine(attachX, parentCenterY, attachX, junctionY);
+      // horizontal spine across children (ensure span covers all children and the attach point)
+      const hStart = Math.min(firstCenterX, attachX);
+      const hEnd = Math.max(lastCenterX, attachX);
+      addLine(hStart, junctionY, hEnd, junctionY);
 
       for (const child of node.children) {
         const childEl = stage.querySelector(`[data-id="${child.person.id}"]`);
