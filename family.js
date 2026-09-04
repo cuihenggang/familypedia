@@ -587,6 +587,185 @@ function drawPedigree(
   resolveRenderedSpouseOverlaps();
 
   /*
+  * Center children beneath the midpoint of their parent couple.
+  * Move every descendant subtree as one unit, including spouses,
+  * so the spouse-spacing fix is preserved.
+  */
+  function balanceRenderedChildren(node) {
+    if (!node.children.length) {
+      return;
+    }
+
+    const stageRect = stage.getBoundingClientRect();
+
+    function cardFor(id) {
+      return stage.querySelector(
+        `.person-card[data-person-id="${id}"]`
+      );
+    }
+
+    function centerX(card) {
+      const rect = card.getBoundingClientRect();
+
+      return (
+        rect.left -
+        stageRect.left +
+        rect.width / 2
+      );
+    }
+
+    function shiftGroup(id, dx) {
+      const group = stage.querySelector(
+        `[data-id="${id}"]`
+      );
+
+      const shiftedNode = nodeById.get(id);
+
+      if (!group || !shiftedNode) {
+        return;
+      }
+
+      shiftedNode.x += dx;
+      group.style.left = `${shiftedNode.x}px`;
+    }
+
+    function shiftSubtree(
+      subtree,
+      dx,
+      shiftedSpouses = new Set()
+    ) {
+      shiftGroup(subtree.person.id, dx);
+
+      for (
+        const spouseId
+        of subtree.person.spouses || []
+      ) {
+        if (
+          spousePlaced.has(spouseId) &&
+          !shiftedSpouses.has(spouseId)
+        ) {
+          shiftGroup(spouseId, dx);
+          shiftedSpouses.add(spouseId);
+        }
+      }
+
+      subtree.children.forEach(child => {
+        shiftSubtree(
+          child,
+          dx,
+          shiftedSpouses
+        );
+      });
+    }
+
+    const parentCard =
+      cardFor(node.person.id);
+
+    const firstChildCard =
+      cardFor(node.children[0].person.id);
+
+    const lastChildCard =
+      cardFor(
+        node.children[
+          node.children.length - 1
+        ].person.id
+      );
+
+    if (
+      !parentCard ||
+      !firstChildCard ||
+      !lastChildCard
+    ) {
+      return;
+    }
+
+    const parentCenter =
+      centerX(parentCard);
+
+    let desiredCenter = parentCenter;
+
+    const spouseCard =
+      (node.person.spouses || [])
+        .map(cardFor)
+        .find(Boolean);
+
+    if (spouseCard) {
+      desiredCenter =
+        (
+          parentCenter +
+          centerX(spouseCard)
+        ) / 2;
+    }
+
+    const currentChildrenCenter =
+      (
+        centerX(firstChildCard) +
+        centerX(lastChildCard)
+      ) / 2;
+
+    const dx =
+      desiredCenter -
+      currentChildrenCenter;
+
+    if (Math.abs(dx) > 0.5) {
+      node.children.forEach(child => {
+        shiftSubtree(child, dx);
+      });
+    }
+
+    node.children.forEach(
+      balanceRenderedChildren
+    );
+  }
+
+  balanceRenderedChildren(rootNode);
+
+  /*
+  * Balancing may move descendants beyond the
+  * previously calculated right edge.
+  */
+  let balancedWidth =
+    Number.parseFloat(stage.style.width) ||
+    width;
+
+  for (const [id] of nodeById) {
+    const group = stage.querySelector(
+      `[data-id="${id}"]`
+    );
+
+    if (!group) {
+      continue;
+    }
+
+    const card =
+      group.querySelector(".person-card") ||
+      group;
+
+    const left =
+      Number.parseFloat(group.style.left) ||
+      0;
+
+    balancedWidth = Math.max(
+      balancedWidth,
+      left +
+        card.getBoundingClientRect().width +
+        MARGIN
+    );
+  }
+
+  stage.style.width = `${balancedWidth}px`;
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${balancedWidth} ${height}`
+  );
+
+  svg.setAttribute(
+    "width",
+    String(balancedWidth)
+  );
+
+  /*
    * Draw lines after all final box positions have
    * been determined.
    */
