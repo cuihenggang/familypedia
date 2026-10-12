@@ -23,8 +23,14 @@ a { color: var(--accent); }
 .eyebrow { margin: 0; color: var(--accent); font-size: .82rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 28px rgb(64 49 30 / 8%); }
 .toolbar { position: relative; padding: 1.25rem; border-bottom: 1px solid var(--line); }
+.toolbar-row { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.toolbar-search { flex: 1 1 320px; }
 .toolbar label { display: block; margin-bottom: .4rem; font-weight: 700; }
 .toolbar input { width: min(460px, 100%); padding: .72rem .85rem; border: 1px solid var(--line); border-radius: 6px; background: white; font: inherit; }
+.toolbar-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.toolbar-btn { appearance: none; border: 1px solid var(--accent); background: var(--accent); color: white; border-radius: 6px; padding: .7rem .95rem; font: inherit; font-weight: 700; cursor: pointer; }
+.toolbar-btn.secondary { background: white; color: var(--accent); }
+.toolbar-btn:hover { filter: brightness(0.97); }
 .search-results { position: absolute; z-index: 5; width: min(460px, calc(100% - 2.5rem)); padding: .35rem; background: white; border: 1px solid var(--line); border-radius: 0 0 6px 6px; box-shadow: 0 10px 20px rgb(0 0 0 / 12%); }
 .search-result { display: block; padding: .5rem .65rem; text-decoration: none; }
 .search-result:hover { background: var(--canvas); }
@@ -84,6 +90,15 @@ th { width: 7rem; color: var(--muted); }
 .relative-list { padding-left: 1.25rem; }
 .error { color: #9d241c; }
 footer { padding: 2rem 1rem; color: var(--muted); text-align: center; font-size: .9rem; }
+
+@media print {
+  @page { margin: 12mm; size: A4 landscape; }
+  body { background: white; }
+  .site-header, .toolbar, .search-results { display: none !important; }
+  .page-shell { width: 100%; margin: 0; }
+  .panel { border: none; box-shadow: none; }
+  .tree-wrap { overflow: visible; width: auto; margin: 0; left: auto; right: auto; }
+}
 
 @media (min-width: 760px) {
   .tree { grid-template-columns: repeat(3, minmax(220px, 1fr)); align-items: start; }

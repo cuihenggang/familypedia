@@ -988,6 +988,71 @@ function drawPedigree(
   );
 }
 
+async function exportFamilyAsImage() {
+  const tree = document.querySelector("#family-tree");
+  const stage = tree && tree.querySelector(".pedigree-stage");
+
+  if (!stage) {
+    window.alert("家谱树还没有生成，无法导出图片。");
+    return;
+  }
+
+  const existing = window.html2canvas;
+
+  if (!existing) {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+    script.async = true;
+
+    await new Promise((resolve, reject) => {
+      script.onload = resolve;
+      script.onerror = () =>
+        reject(new Error("无法加载图片导出库。"));
+      document.head.appendChild(script);
+    });
+  }
+
+  const canvas = await window.html2canvas(stage, {
+    backgroundColor: "#fffdf8",
+    scale: 2,
+    logging: false,
+    useCORS: true
+  });
+
+  const link = document.createElement("a");
+  const stamp = new Date()
+    .toISOString()
+    .slice(0, 10);
+
+  document.body.appendChild(link);
+  link.download = `family-tree-${stamp}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  link.remove();
+}
+
+function setupExportButtons() {
+  const exportPngButton =
+    document.getElementById("export-png");
+
+  const exportPdfButton =
+    document.getElementById("export-pdf");
+
+  if (exportPngButton) {
+    exportPngButton.addEventListener(
+      "click",
+      exportFamilyAsImage
+    );
+  }
+
+  if (exportPdfButton) {
+    exportPdfButton.addEventListener(
+      "click",
+      () => window.print()
+    );
+  }
+}
+
 function setupSearch(people) {
   const input =
     document.querySelector("#person-search");
@@ -1039,4 +1104,5 @@ function setupSearch(people) {
   });
 }
 
+setupExportButtons();
 loadFamily();

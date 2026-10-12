@@ -19,8 +19,16 @@
 
     <section class="panel">
       <div class="toolbar">
-        <label for="person-search">搜索人物</label>
-        <input id="person-search" type="search" placeholder="输入姓名" autocomplete="off">
+        <div class="toolbar-row">
+          <div class="toolbar-search">
+            <label for="person-search">搜索人物</label>
+            <input id="person-search" type="search" placeholder="输入姓名" autocomplete="off">
+          </div>
+          <div class="toolbar-actions">
+            <button id="export-png" class="toolbar-btn" type="button">保存 PNG</button>
+            <button id="export-pdf" class="toolbar-btn secondary" type="button">打印 / PDF</button>
+          </div>
+        </div>
         <div id="search-results" class="search-results" hidden></div>
       </div>
 
